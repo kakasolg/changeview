@@ -15,12 +15,38 @@ export default function ManagePage() {
   const [newCard, setNewCard] = useState({ question: '', answer: '' });
 
   useEffect(() => {
-    // 데이터 로드 시뮬레이션
-    setTimeout(() => {
-      setSubject({ _id: subjectId, name: '샘플 주제', description: '예시 주제입니다.' });
-      setCards([]);
-      setLoading(false);
-    }, 500);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // 주제 정보 가져오기
+        const subjectResponse = await fetch(`/api/memorize/subjects/${subjectId}`);
+        if (!subjectResponse.ok) {
+          throw new Error('주제 정보를 불러올 수 없습니다.');
+        }
+        const subjectData = await subjectResponse.json();
+        setSubject(subjectData);
+        
+        // 카드 정보 가져오기
+        const cardsResponse = await fetch(`/api/memorize/cards/${subjectId}`);
+        if (!cardsResponse.ok) {
+          throw new Error('카드 정보를 불러올 수 없습니다.');
+        }
+        const cardsData = await cardsResponse.json();
+        setCards(cardsData);
+        
+      } catch (error) {
+        console.error('데이터 로드 실패:', error);
+        setSubject(null);
+        setCards([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (subjectId) {
+      fetchData();
+    }
   }, [subjectId]);
 
   const addCard = async (e: React.FormEvent) => {
@@ -30,18 +56,37 @@ export default function ManagePage() {
       return;
     }
     
-    // 임시로 로컬 상태에 추가
-    const newCardData = {
-      _id: Date.now().toString(),
-      question: newCard.question,
-      answer: newCard.answer,
-      subjectId,
-      createdAt: new Date().toISOString()
-    };
-    
-    setCards([...cards, newCardData]);
-    setNewCard({ question: '', answer: '' });
-    setShowAddForm(false);
+    try {
+      // API를 통해 카드 추가
+      const response = await fetch(`/api/memorize/cards/${subjectId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: newCard.question.trim(),
+          answer: newCard.answer.trim()
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '카드 추가에 실패했습니다.');
+      }
+      
+      const newCardData = await response.json();
+      
+      // 로컬 상태도 업데이트
+      setCards([newCardData, ...cards]); // 새 카드를 맨 위에 추가
+      setNewCard({ question: '', answer: '' });
+      setShowAddForm(false);
+      
+      alert('문제가 성공적으로 추가되었습니다!');
+      
+    } catch (error) {
+      console.error('카드 추가 실패:', error);
+      alert(error instanceof Error ? error.message : '카드 추가에 실패했습니다.');
+    }
   };
 
   if (loading) {
