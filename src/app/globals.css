@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+
+/* Flash Card Styles */
+/* 1. 3D 효과를 위한 공간(perspective) 설정 */
+.flip-card {
+  background-color: transparent;
+  /* width와 height는 Tailwind 클래스로 대체되므로 여기서는 제거 */
+  border: 1px solid #f1f1f1;
+  perspective: 1000px; /* 3D 효과의 깊이를 설정. 숫자가 클수록 효과가 완만해짐 */
+  cursor: pointer;
+}
+
+/* 2. 실제로 뒤집히는 부분 */
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s; /* 애니메이션 속도 */
+  transform-style: preserve-3d; /* 3D 공간을 유지하도록 설정 (매우 중요!) */
+}
+
+/* 3. JavaScript로 'is-flipped' 클래스가 추가되면 180도 회전 */
+.flip-card-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+/* 4. 카드 앞면과 뒷면의 공통 스타일 */
+.flip-card-front, .flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden; /* Safari 브라우저를 위한 설정 */
+  backface-visibility: hidden; /* 카드의 뒷면을 숨김 (매우 중요!) */
+  border-radius: 15px;
+  
+  /* 텍스트를 보기 좋게 만들기 위한 스타일 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  color: white;
+  font-weight: bold;
+  background-size: cover;
+  background-position: center;
+}
+
+/* 5. 카드 뒷면은 처음에 180도 회전되어 있어야 함 */
+.flip-card-back {
+  transform: rotateY(180deg);
+}

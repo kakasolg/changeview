@@ -1,0 +1,11 @@
+.env.local
+.env
+node_modules/
+docs/
+.next/
+pyproj/
+
+# System files
+.DS_Store
+Thumbs.db
+.vscode
