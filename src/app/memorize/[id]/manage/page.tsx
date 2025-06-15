@@ -13,6 +13,10 @@ export default function ManagePage() {
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newCard, setNewCard] = useState({ question: '', answer: '' });
+  
+  // 수정 관련 상태
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const [editCard, setEditCard] = useState({ question: '', answer: '' });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,7 +92,88 @@ export default function ManagePage() {
       alert(error instanceof Error ? error.message : '카드 추가에 실패했습니다.');
     }
   };
-
+  
+  // 카드 수정 시작
+  const startEditCard = (card: any) => {
+    setEditingCardId(card._id);
+    setEditCard({ question: card.question, answer: card.answer });
+  };
+  
+  // 카드 수정 취소
+  const cancelEditCard = () => {
+    setEditingCardId(null);
+    setEditCard({ question: '', answer: '' });
+  };
+  
+  // 카드 수정 완료
+  const updateCard = async (cardId: string) => {
+    if (!editCard.question.trim() || !editCard.answer.trim()) {
+      alert('문제와 답을 모두 입력해주세요.');
+      return;
+    }
+  
+    try {
+      const response = await fetch(`/api/memorize/cards/${cardId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: editCard.question.trim(),
+          answer: editCard.answer.trim()
+        })
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '카드 수정에 실패했습니다.');
+      }
+  
+      const updatedCard = await response.json();
+  
+      // 로컬 상태 업데이트
+      setCards(cards.map(card => 
+        card._id === cardId ? updatedCard : card
+      ));
+  
+      // 수정 모드 종료
+      setEditingCardId(null);
+      setEditCard({ question: '', answer: '' });
+  
+      alert('문제가 성공적으로 수정되었습니다!');
+  
+    } catch (error) {
+      console.error('카드 수정 실패:', error);
+      alert(error instanceof Error ? error.message : '카드 수정에 실패했습니다.');
+    }
+  };
+  
+  // 카드 삭제
+  const deleteCard = async (cardId: string) => {
+    if (!confirm('정말로 이 문제를 삭제하시겠습니까?')) {
+      return;
+    }
+  
+    try {
+      const response = await fetch(`/api/memorize/cards/${cardId}`, {
+        method: 'DELETE'
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '카드 삭제에 실패했습니다.');
+      }
+  
+      // 로컬 상태에서 제거
+      setCards(cards.filter(card => card._id !== cardId));
+  
+      alert('문제가 성공적으로 삭제되었습니다!');
+  
+    } catch (error) {
+      console.error('카드 삭제 실패:', error);
+      alert(error instanceof Error ? error.message : '카드 삭제에 실패했습니다.');
+    }
+  };
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
@@ -180,14 +265,79 @@ export default function ManagePage() {
             <div className="space-y-4">
               {cards.map((card: any, index: number) => (
                 <div key={card._id} className="border rounded-lg p-4">
-                  <div className="mb-2">
-                    <span className="text-sm text-gray-500">문제 {index + 1}</span>
-                    <p className="font-medium">{card.question}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-500">답</span>
-                    <p className="text-green-700">{card.answer}</p>
-                  </div>
+                  {editingCardId === card._id ? (
+                    // 수정 모드
+                    <div>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          문제 {index + 1} 수정
+                        </label>
+                        <textarea
+                          value={editCard.question}
+                          onChange={(e) => setEditCard({ ...editCard, question: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows={3}
+                          required
+                        />
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          답
+                        </label>
+                        <textarea
+                          value={editCard.answer}
+                          onChange={(e) => setEditCard({ ...editCard, answer: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows={2}
+                          required
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => updateCard(card._id)}
+                          className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
+                        >
+                          저장
+                        </button>
+                        <button
+                          onClick={cancelEditCard}
+                          className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    // 일반 모드
+                    <div>
+                      <div className="mb-2">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <span className="text-sm text-gray-500">문제 {index + 1}</span>
+                            <p className="font-medium">{card.question}</p>
+                          </div>
+                          <div className="flex gap-2 ml-4">
+                            <button
+                              onClick={() => startEditCard(card)}
+                              className="px-2 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors"
+                            >
+                              수정
+                            </button>
+                            <button
+                              onClick={() => deleteCard(card._id)}
+                              className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors"
+                            >
+                              삭제
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500">답</span>
+                        <p className="text-green-700">{card.answer}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
