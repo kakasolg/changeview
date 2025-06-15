@@ -17,6 +17,32 @@ export default function ManagePage() {
   // 수정 관련 상태
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [editCard, setEditCard] = useState({ question: '', answer: '' });
+// 기억의 궁전 이모티콘 배열
+const memoryPalaceEmojis = [
+  '🚪', // 현관문
+  '🪜', // 계단
+  '🏠', // 발코니
+  '💡', // 스위치
+  '📚', // 책상
+  '🪑', // 의자
+  '💻', // 컴퓨터
+  '📧', // 이메일
+  '📺', // 유튜브
+  '👔', // 옷장
+  '🚽', // 화장실
+  '🛁', // 샤워
+  '🍳', // 주방
+  '🛏️', // 침대
+  '😴', // 잠
+  // 추가 이모티콘들 (더 많은 문제를 위해)
+  '🌅', '☕', '🪥', '🪞', '🧸', '📖', '✏️', '🗓️', '📱', '🎧',
+  '🪴', '🖼️', '🕯️', '🏆', '🎯', '🔑', '🧩', '🎨', '🎭', '🎪'
+];
+
+// 이모티콘 가져오는 함수
+const getMemoryEmoji = (index: number) => {
+  return memoryPalaceEmojis[index % memoryPalaceEmojis.length];
+};
 
   useEffect(() => {
     const fetchData = async () => {
@@ -277,7 +303,7 @@ export default function ManagePage() {
                     <div>
                       <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          문제 {index + 1} 수정
+                                                    {getMemoryEmoji(index)} 문제 수정
                         </label>
                         <textarea
                           value={editCard.question}
@@ -320,7 +346,7 @@ export default function ManagePage() {
                       <div className="mb-2">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <span className="text-sm text-gray-500">문제 {index + 1}</span>
+                                                        <span className="text-sm text-gray-500">{getMemoryEmoji(index)} 문제</span>
                             <p className="font-medium">{card.question}</p>
                           </div>
                           <div className="flex gap-2 ml-4">

@@ -29,6 +29,32 @@ export default function LearnPage() {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
+// 기억의 궁전 이모티콘 배열
+const memoryPalaceEmojis = [
+  '🚪', // 현관문
+  '🪜', // 계단
+  '🏠', // 발코니
+  '💡', // 스위치
+  '📚', // 책상
+  '🪑', // 의자
+  '💻', // 컴퓨터
+  '📧', // 이메일
+  '📺', // 유튜브
+  '👔', // 옷장
+  '🚽', // 화장실
+  '🛁', // 샤워
+  '🍳', // 주방
+  '🛏️', // 침대
+  '😴', // 잠
+  // 추가 이모티콘들 (더 많은 문제를 위해)
+  '🌅', '☕', '🪥', '🪞', '🧸', '📖', '✏️', '🗓️', '📱', '🎧',
+  '🪴', '🖼️', '🕯️', '🏆', '🎯', '🔑', '🧩', '🎨', '🎭', '🎪'
+];
+
+// 이모티콘 가져오는 함수
+const getMemoryEmoji = (index: number) => {
+  return memoryPalaceEmojis[index % memoryPalaceEmojis.length];
+};
 
   useEffect(() => {
     const fetchData = async () => {
@@ -119,7 +145,7 @@ export default function LearnPage() {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
             📚 {subject?.name} - 학습하기
           </h1>
-          <p className="text-gray-600 mb-4">문제 {currentCardIndex + 1} / {cards.length}</p>
+                    <p className="text-gray-600 mb-4">{getMemoryEmoji(currentCardIndex)} 문제 / {cards.length}</p>
           <div className="flex gap-4 justify-center mb-6">
             <Link href="/memorize" className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
               ← 주제 목록으로
@@ -145,7 +171,7 @@ export default function LearnPage() {
                   <Image src={cardBackImage} alt="카드 앞면" fill style={{ objectFit: 'cover' }} className="rounded-lg" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text">
                     <div className="text-center max-w-sm">
-                      <h2 className="text-xl font-bold mb-4">문제</h2>
+                                            <h2 className="text-xl font-bold mb-4">{getMemoryEmoji(currentCardIndex)} 문제</h2>
                       <p className="text-lg leading-relaxed">{currentCard.question}</p>
                     </div>
                   </div>
