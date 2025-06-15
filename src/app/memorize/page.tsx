@@ -58,6 +58,31 @@ export default function MemorizePage() {
       setError('서버 연결에 실패했습니다.');
     }
   };
+  
+  // 주제 삭제 (카드가 없을 때만 가능)
+  const deleteSubject = async (subjectId: string, subjectName: string) => {
+    if (!confirm(`정말로 '${subjectName}' 주제를 삭제하시겠습니까?`)) {
+      return;
+    }
+  
+    try {
+      setError('');
+      const response = await fetch(`/api/memorize/subjects/${subjectId}`, {
+        method: 'DELETE'
+      });
+  
+      if (response.ok) {
+        alert('주제가 성공적으로 삭제되었습니다!');
+        loadSubjects(); // 목록 새로고침
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || '주제 삭제에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('서버 연결에 실패했습니다.');
+    }
+  };
 
   useEffect(() => {
     loadSubjects();
@@ -194,6 +219,16 @@ export default function MemorizePage() {
                     >
                       문제 관리
                     </Link>
+                    {/* 카드가 없을 때만 삭제 버튼 표시 */}
+                    {(subject.cardCount || 0) === 0 && (
+                      <button
+                        onClick={() => deleteSubject(subject._id, subject.name)}
+                        className="px-3 py-2 bg-red-500 text-white text-center rounded-md hover:bg-red-600 transition-colors text-sm"
+                        title="카드가 없을 때만 삭제 가능"
+                      >
+                        삭제
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
