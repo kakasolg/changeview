@@ -8,45 +8,62 @@ import { useParams } from 'next/navigation';
 import cardFrontImage from '../../card_front.png';
 import cardBackImage from '../../card_back.png';
 
+interface Subject {
+  _id: string;
+  name: string;
+  description: string;
+}
+
+interface Card {
+  _id: string;
+  question: string;
+  answer: string;
+}
+
 export default function LearnPage() {
   const params = useParams();
   const subjectId = params.id as string;
   
-  const [subject, setSubject] = useState(null);
-  const [cards, setCards] = useState([]);
+  const [subject, setSubject] = useState<Subject | null>(null);
+  const [cards, setCards] = useState<Card[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 샘플 데이터 로드
-    setTimeout(() => {
-      setSubject({ 
-        _id: subjectId, 
-        name: '영어 단어', 
-        description: '일상에서 자주 사용하는 영어 단어들' 
-      });
-      
-      setCards([
-        {
-          _id: '1',
-          question: 'What does "hello" mean in Korean?',
-          answer: '안녕하세요 (annyeonghaseyo)'
-        },
-        {
-          _id: '2', 
-          question: 'What does "thank you" mean in Korean?',
-          answer: '감사합니다 (gamsahamnida)'
-        },
-        {
-          _id: '3',
-          question: 'What does "goodbye" mean in Korean?', 
-          answer: '안녕히 가세요 (annyeonghi gaseyo)'
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // 주제 정보 가져오기
+        const subjectResponse = await fetch(`/api/memorize/subjects/${subjectId}`);
+        if (!subjectResponse.ok) {
+          throw new Error('주제 정보를 불러올 수 없습니다.');
         }
-      ]);
-      
-      setLoading(false);
-    }, 500);
+        const subjectData = await subjectResponse.json();
+        setSubject(subjectData);
+        
+        // 카드 정보 가져오기
+        const cardsResponse = await fetch(`/api/memorize/cards/${subjectId}`);
+        if (!cardsResponse.ok) {
+          throw new Error('카드 정보를 불러올 수 없습니다.');
+        }
+        const cardsData = await cardsResponse.json();
+        setCards(cardsData);
+        
+      } catch (error) {
+        console.error('데이터 로드 실패:', error);
+        // 에러 발생 시 에러 상태를 표시할 수 있도록 설정
+        setSubject(null);
+        setCards([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (subjectId) {
+      fetchData();
+    }
   }, [subjectId]);
 
   const currentCard = cards[currentCardIndex];
@@ -55,7 +72,7 @@ export default function LearnPage() {
     setIsFlipped(!isFlipped);
   };
 
-  const handleDifficultySelect = (difficulty) => {
+  const handleDifficultySelect = (difficulty: 'again' | 'soon' | 'later' | 'mastered') => {
     setIsFlipped(false);
     if (currentCardIndex < cards.length - 1) {
       setCurrentCardIndex(currentCardIndex + 1);
@@ -126,7 +143,7 @@ export default function LearnPage() {
               <div className="absolute inset-0 w-full h-full" style={{ backfaceVisibility: 'hidden' }}>
                 <div className="relative w-full h-full">
                   <Image src={cardBackImage} alt="카드 앞면" fill style={{ objectFit: 'cover' }} className="rounded-lg" />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-white">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text">
                     <div className="text-center max-w-sm">
                       <h2 className="text-xl font-bold mb-4">문제</h2>
                       <p className="text-lg leading-relaxed">{currentCard.question}</p>
@@ -138,7 +155,7 @@ export default function LearnPage() {
               <div className="absolute inset-0 w-full h-full" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
                 <div className="relative w-full h-full">
                   <Image src={cardFrontImage} alt="카드 뒷면" fill style={{ objectFit: 'cover' }} className="rounded-lg" />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-white">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text">
                     <div className="text-center max-w-sm">
                       <h2 className="text-xl font-bold mb-4">답</h2>
                       <p className="text-lg leading-relaxed">{currentCard.answer}</p>
