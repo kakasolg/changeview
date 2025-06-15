@@ -113,12 +113,13 @@ export default function ManagePage() {
     }
   
     try {
-      const response = await fetch(`/api/memorize/cards/${cardId}`, {
+      const response = await fetch(`/api/memorize/cards/${subjectId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          cardId,
           question: editCard.question.trim(),
           answer: editCard.answer.trim()
         })
@@ -155,8 +156,14 @@ export default function ManagePage() {
     }
   
     try {
-      const response = await fetch(`/api/memorize/cards/${cardId}`, {
-        method: 'DELETE'
+      const response = await fetch(`/api/memorize/cards/${subjectId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cardId
+        })
       });
   
       if (!response.ok) {
