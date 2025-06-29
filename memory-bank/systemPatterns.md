@@ -3,57 +3,32 @@
 ## 🏢 전체 시스템 아키텍처
 
 ### 아키텍처 개요
-**지혜의 렌즈**는 **완전한 플래시카드 학습 플랫폼**으로 진화한 **전체스텍 Next.js 어플리케이션**입니다. 메인 페이지에서 즉시 64괘 학습을 시작할 수 있는 원스톱 플랫폼입니다.
+**지혜의 렌즈**는 **마이크로서비스 아키텍처**를 기반으로 한 **전체스텍 Next.js 어플리케이션**입니다. 각 기능이 독립적으로 작동하며, API Routes를 통해 서로 통신합니다.
 
 ```
-사용자 인터페이스 (React + Tailwind + Three.js)
+사용자 인터페이스 (React + Tailwind)
 │
-├── 🎴 메인 페이지 (플래시카드 학습 시스템) - 루트 페이지 (/)
-├── 📝 기존 텍스트 입력 시스템 (page_old_hexagram_input.tsx - 백업)
-├── 🎲 3D 주사위 선택 인터페이스 (/dice-test)
-├── AI 해석 및 메모 시스템
+├── 랜딩 페이지
 ├── 상황 입력 인터페이스
 ├── 결과 표시 대시보드
 └── 관점별 상세 뷰
 │
 Next.js App Router
 │
-├── /api/hexagrams              ── 64괘 데이터 CRUD
-├── /api/flash-card/difficulty  ── 학습 진도 추적 (CORE!)
-├── /api/analyze                ── AI 분석 엔진
-├── /api/ai/function-calling-test ── Gemini Function-Calling
-├── /api/test/user-memo-db      ── 메모 CRUD 시스템 (CORE!)
-├── /api/perspectives           ── 6가지 관점 생성
-└── /api/sessions               ── 사용자 세션 관리
+├── /api/hexagrams      ── 64괘 데이터 CRUD
+├── /api/analyze        ── AI 분석 엔진
+├── /api/perspectives   ── 6가지 관점 생성
+└── /api/sessions       ── 사용자 세션 관리
 │
-├── Google Gemini API           ── AI 분석 엔진 + Function-Calling
-└── MongoDB                     ── 괘 데이터 + 사용자 메모 + 학습 진도 저장소
-    ├── hexagrams              ── 64괘 마스터 데이터
-    ├── user_memos             ── 사용자 개인 메모 (CORE!)
-    └── flash_card_progress    ── 학습 진도 추적 (CORE!)
+├── Google Gemini API   ── AI 분석 엔진
+└── MongoDB             ── 데이터 저장소
 ```
 
 ### 레이어 구조
-1. **프레젠테이션 레이어** - React 컴포넌트 + Tailwind CSS + Three.js 3D
-2. **비즈니스 로직 레이어** - Next.js API Routes + AI 엔진 + Function-Calling
-3. **데이터 액세스 레이어** - Mongoose ODM + MongoDB + 메모 시스템
+1. **프레젠테이션 레이어** - React 컴포넌트 + Tailwind CSS
+2. **비즈니스 로직 레이어** - Next.js API Routes + AI 엔진
+3. **데이터 액세스 레이어** - Mongoose ODM + MongoDB
 4. **외부 서비스 레이어** - Google Gemini API
-
-## 🎲 3D 주사위 시스템 아키텍처 (NEW!)
-
-### 3D 렌더링 파이프라인
-```
-Three.js Scene → 8면체 Geometry → 텍스처 매핑 → 애니메이션 → 사용자 인터랙션
-│
-├── 상괘 주사위 (파란색) ── 8가지 팔괘 상징
-├── 하괘 주사위 (빨간색) ── 8가지 팔괘 상징
-└── 계산 로직: (상괘-1) × 8 + 하괘 = 64괘 번호
-```
-
-### 데이터 통합 플로우
-```
-3D 주사위 결과 → 괘 번호 계산 → MongoDB 괘 데이터 조회 → AI 해석 요청 → 메모 저장
-```
 
 ## 📊 데이터 플로우 패턴
 
@@ -67,19 +42,12 @@ graph TD
     E --> F[6가지 관점 생성]
     F --> G[userSessions 저장]
     G --> H[결과 반환]
-    
-    I[3D 주사위 선택] --> J[괘 번호 계산]
-    J --> K[MongoDB 괘 데이터 조회]
-    K --> L[AI Function-Calling 해석]
-    L --> M[사용자 메모 저장]
-    M --> N[통합 결과 표시]
 ```
 
 ### 데이터 위계 구조
 1. **마스터 데이터**: 64괘 기본 정보 (hexagrams)
 2. **세션 데이터**: 사용자 분석 결과 (userSessions)
-3. **메모 데이터**: 사용자 개인 기록 (user_memos) ← NEW!
-4. **임시 데이터**: 메모리 내 AI 처리 결과
+3. **임시 데이터**: 메모리 내 AI 처리 결과
 
 ## 🧩 핵심 설계 패턴
 
@@ -122,7 +90,7 @@ class ContextualAnalysis {
     return this.strategy.analyze(userSituation, hexagram);
   }
 }
-```
+
 
 ### 3. 옵저버 패턴 (Observer Pattern)
 **용도**: 사용자 상호작용 추적
@@ -326,7 +294,7 @@ class ApiErrorHandler {
 }
 ```
 
-#### 3. /api/perspectives - 정신모델 격자틀 이론 생성 API
+#### 3. /api/perspectives - 6가지 관점 생성 API
 ```javascript
 // POST /api/perspectives
 // 비동기 처리 패턴
@@ -352,191 +320,286 @@ async function generatePerspectives(sessionId, hexagram, userContext) {
 }
 ```
 
-## 🎴 메인 페이지 아키텍처 (NEW!)
+## 📏 확장성 및 성능 패턴
 
-### 파일 구조 변경
-```
-/src/app/
-├── page.tsx                    ── 플래시카드 학습 시스템 (메인 페이지)
-├── page_old_hexagram_input.tsx ── 기존 텍스트 입력 시스템 (백업)
-├── card_front.png              ── 카드 앞면 이미지
-├── card_back.png               ── 카드 뒷면 이미지
-└── test/flash-card/
-    ├── page.tsx                ── 원본 플래시카드 페이지 (유지)
-    ├── card_front.png          ── 원본 이미지 (유지)
-    └── card_back.png           ── 원본 이미지 (유지)
-```
-
-### 메인 페이지 컴포넌트 구조
-```
-HomePage (src/app/page.tsx)
-├── 브랜딩 섹션
-│   ├── "🎴 지혜의 렌즈" 타이틀
-│   ├── "64괘 플래시카드 학습 시스템" 부제
-│   └── 사용법 안내
-├── 3D 플립 카드 시스템
-│   ├── flip-card-front (문제: 괘상, 이름, 핵심관점)
-│   └── flip-card-back (답: 요약, 키워드)
-├── 학습 상태 표시
-│   ├── 현재 난이도 배지
-│   └── 개인 메모 섹션
-├── 메모 입력/수정 인터페이스
-└── 4단계 난이도 평가 버튼
-```
-
-### 사용자 접근 패턴
-```
-사용자 접속 (http://localhost:3000/)
-│
-├── 즉시 플래시카드 학습 화면 표시
-├── 프로젝트 브랜딩 및 설명 확인
-├── 사용법 안내 숙지
-└── 바로 학습 시작 가능
-```
-
-### 메인 페이지 데이터 플로우
-```
-HomePage 로드
-│
-├── fetchRandomHexagram() ── /api/hexagrams?random=true
-├── fetchHexagramMemoAndProgress() 
-│   ├── /api/test/user-memo-db?hexagramNumber=N&username=test
-│   └── /api/flash-card/difficulty?username=test&hexagramNumber=N
-├── 카드 UI 렌더링
-├── 학습 상태 표시
-└── 사용자 인터랙션 대기
-```
-
-
-
-## 🎲 pyproj 점괘 추천 시스템 아키텍처 (NEW! 2025-06-13)
-
-### 시스템 개요
-**위치**: `pyproj/` 디렉토리 - 매인 프로젝트와 별도 운영
-**목적**: 주역 전통 점사법을 현대적 AI 도구로 구현
-**기술 스택**: Python + Streamlit + LangChain + Ollama + MongoDB
-
-### 아키텍처 패턴
-```
-pyproj/
-├── app.py                 ── Streamlit 메인 애플리케이션
-├── mongodb.py            ── LangChain + Ollama + MongoDB 연동
-├── main.py               ── 엔트리 포인트
-├── pyproject.toml        ── 의존성 관리 (uv 기반)
-└── uv.lock               ── 의존성 잠금 파일
-```
-
-### 데이터 구조 패턴
-
-#### **1️⃣ 괘쌍 관계 매핑**
-```python
-# 철학적 연결성 및 주제별 흐름
-gua_links = {
-    # 상경 (대립과 조화)
-    11: [12],      # 태(평안) → 비(막힘)
-    12: [11],      # 비(막힘) → 태(평안)
-    
-    # 붕괴와 회복 순환
-    23: [24],      # 박(붕괴) → 복(회복)
-    24: [25],      # 복(새시작) → 무망(진실)
-    
-    # 완성과 미완성 순환
-    63: [64],      # 기제(완성) → 미제(미완)
-    64: [1],       # 미제(미완) → 건(시작)
-    # ... 64괘 전체 매핑
+### 1. 캐시에이션 전략
+```javascript
+// /lib/cache.js
+class CacheManager {
+  // 64괘 데이터는 마스터 데이터이므로 영구 캐시
+  static HEXAGRAMS_TTL = Infinity;
+  
+  // AI 분석 결과는 30분 캐시
+  static ANALYSIS_TTL = 30 * 60 * 1000;
+  
+  async cacheHexagramData() {
+    const hexagrams = await this.fetchAllHexagrams();
+    return new Map(hexagrams.map(h => [h.number, h]));
+  }
+  
+  async cacheAnalysisResult(sessionId, result) {
+    await redis.setex(
+      `analysis:${sessionId}`, 
+      this.ANALYSIS_TTL / 1000, 
+      JSON.stringify(result)
+    );
+  }
 }
 ```
 
-#### **2️⃣ 효변 메커니즘**
-```python
-# 각 괘별 6효 변화 시 지괘(之卦) 매핑
-eff_change_map = {
-    1: {  # 건괘 (☰☰)
-        1: 44,  # 초괘 변 → 구괘 (만남)
-        2: 33,  # 이괘 변 → 둔괘 (물러남)
-        3: 12,  # 삼괘 변 → 비괘 (막힘)
-        4: 20,  # 사괘 변 → 관괘 (관찰)
-        5: 9,   # 오괘 변 → 소축괘 (선비)
-        6: 14,  # 상괘 변 → 대유괘 (풍요)
-    },
-    # ... 전체 64괘 매핑
+### 2. 데이터베이스 최적화
+```javascript
+// /lib/database/indexes.js
+// 인덱스 전략
+const hexagramIndexes = [
+  { number: 1 },                    // 괘 번호로 빠른 조회
+  { name: 'text' },                 // 한글 검색
+  { keywords: 1 },                  // 키워드 배열 검색
+  { 'perspectives.ancient.content': 'text' }  // 전문 검색
+];
+
+const sessionIndexes = [
+  { sessionId: 1 },                 // 세션 ID로 빠른 조회
+  { timestamp: -1 },                // 시간 순 정렬
+  { 'selectedHexagram': 1 },        // 선택된 괘별 조회
+  { 
+    timestamp: -1, 
+    'aiAnalysis.confidence': -1 
+  }                                 // 복합 인덱스
+];
+```
+
+### 3. 마이크로서비스 확장 준비
+```javascript
+// 미래 확장을 위한 서비스 인터페이스
+interface AnalysisService {
+  analyzeUserSituation(situation: string, context: UserContext): Promise<HexagramSelection>;
+  generatePerspectives(hexagram: Hexagram, userContext: UserContext): Promise<Perspectives>;
+  saveUserSession(session: UserSession): Promise<void>;
+}
+
+// 다양한 구현체 준비
+class LocalAnalysisService implements AnalysisService {
+  // 현재 Next.js API Routes 기반 구현
+}
+
+class MicroserviceAnalysisService implements AnalysisService {
+  // 미래 마이크로서비스 기반 구현
 }
 ```
 
-### 비즈니스 로직 패턴
-
-#### **변효 수별 해석 원칙**
-```python
-def get_interpretation_method(changing_lines):
-    count = len(changing_lines)
-    
-    if count == 0:
-        return "gua_text"      # 본괘 괘사
-    elif count == 1:
-        return "line_text"     # 해당 효사
-    elif count == 2:
-        return "upper_line"    # 위쪽 효사
-    elif count == 3:
-        return "both_guas"     # 본괘+지괘 종합
-    elif count <= 6:
-        return "target_gua"    # 지괘 중심
+### 4. 모니터링 및 로깅 패턴
+```javascript
+// /lib/monitoring.js
+class PerformanceMonitor {
+  static trackApiPerformance(endpoint, duration, success) {
+    console.log({
+      endpoint,
+      duration,
+      success,
+      timestamp: new Date().toISOString(),
+      memory: process.memoryUsage(),
+      cpu: process.cpuUsage()
+    });
+  }
+  
+  static trackUserJourney(event) {
+    // 사용자 행동 패턴 분석
+    analytics.track(event.userId, event.type, event.properties);
+  }
+}
 ```
 
-#### **다음 괘 추천 로직**
-```python
-def recommend_next_gua(current_gua, changing_lines=None):
-    # 1. 효변이 있으면 지괘 계산
-    if changing_lines:
-        target_gua = calculate_target_gua(current_gua, changing_lines)
-        return {
-            "method": "hexagram_change",
-            "target": target_gua,
-            "interpretation": get_interpretation_method(changing_lines)
-        }
+## 🔒 보안 및 데이터 보호 패턴
+
+### 입력 데이터 검증
+```javascript
+// /lib/validation.js
+class InputValidator {
+  static validateUserSituation(input) {
+    const schema = {
+      type: 'string',
+      minLength: 10,
+      maxLength: 2000,
+      pattern: /^[\w\s\uac00-\ud7af\u3040-\u309f\u30a0-\u30ff.,!?()-]+$/
+    };
     
-    # 2. 효변이 없으면 주제적 연결 괘 추천
-    linked_guas = gua_links.get(current_gua, [])
-    return {
-        "method": "thematic_flow",
-        "options": linked_guas,
-        "interpretation": "philosophical_connection"
+    if (!input || input.length < schema.minLength) {
+      throw new ValidationError('상황 설명이 너무 짧습니다.');
     }
+    
+    if (input.length > schema.maxLength) {
+      throw new ValidationError('상황 설명이 너무 깁니다.');
+    }
+    
+    return this.sanitizeInput(input);
+  }
+  
+  static sanitizeInput(input) {
+    // XSS 방지를 위한 입력 살균
+    return input
+      .replace(/<script[^>]*>.*?<\/script>/gi, '')
+      .replace(/<[^>]+>/g, '')
+      .trim();
+  }
+}
 ```
 
-### UI/UX 패턴
-
-#### **Streamlit 컴포넌트 구조**
-```python
-# app.py 메인 플로우
-1. 타이틀 및 설명
-2. 상괘/하괘 선택 (1~8)
-3. 괘 번호 계산 표시
-4. 효변 선택 (multiselect 1~6) ← NEW!
-5. 괘상 시각화 (☰☱☲☳☴☵☶☷) ← NEW!
-6. AI 해석 요청 버튼
-7. 스트리밍 응답 표시
-8. 다음 괘 추천 인터페이스 ← NEW!
+### 데이터 프라이버시 보호
+```javascript
+// /lib/privacy.js
+class PrivacyManager {
+  static hashUserData(userData) {
+    // 개인식별 가능 정보 해싱
+    return crypto.createHash('sha256').update(userData).digest('hex');
+  }
+  
+  static anonymizeSession(session) {
+    return {
+      ...session,
+      userAgent: this.maskUserAgent(session.userAgent),
+      ipAddress: this.maskIpAddress(session.ipAddress),
+      userSituation: this.removePersonalInfo(session.userSituation)
+    };
+  }
+}
 ```
 
-### 데이터 플로우
+## 🔄 중요 구현 파이프라인
+
+### 핵심 실행 흐름
+1. **사용자 입력 → 입력 검증 → AI 분석 요청**
+2. **Gemini API → 괘 선택 로직 → 데이터베이스 조회**
+3. **6가지 관점 병렬 생성 → 결과 통합 → 세션 저장**
+4. **UI 렌더링 → 사용자 피드백 → 성능 모니터링**
+
+### 오류 처리 전략
+- **Graceful Degradation**: 일부 관점 생성 실패시에도 서비스 계속
+- **Circuit Breaker**: 외부 API 장애시 대체 로직 실행
+- **Retry Logic**: 일시적 오류에 대한 자동 재시도
+- **Fallback Data**: 네트워크 오류시 캐시된 데이터 사용
+
+## 🔄 현재 구현된 시스템 현황 (2025-06-11)
+
+### 완전히 동작하는 시스템 구조
 ```
-사용자 입력 (상괘/하괘/효변)
-│
-├── 괘 번호 계산 (1~64)
-├── 효변 유형 분석 (0~6개)
-├── 다음 괘 옵션 생성
-│   ├── 효변 있음 → 지괘 계산
-│   └── 효변 없음 → 주제적 연결
-│
-└── LLM 프롬프트 생성
-    ├── 본괘 상황 분석
-    ├── 변화 방향성 해석
-    └── 구체적 행동 가이드
+✅ 프론트엔드 (React + Tailwind)
+    ├── 홈페이지 (http://localhost:3000)
+    └── Gemini API 테스트 인터페이스
+    
+✅ Next.js App Router
+    ├── /api/test-db         ── MongoDB 연결 테스트 (완전 동작)
+    ├── /api/test-gemini     ── Gemini API 테스트 (완전 동작)  
+    └── /api/hexagrams       ── 64괘 CRUD API (완전 동작)
+    
+✅ 데이터 레이어
+    ├── MongoDB (localhost:27017/wisdom_lenses) ── 연결 완료
+    ├── Mongoose ODM ── 스키마 및 메소드 완전 구현
+    └── 5개 테스트 데이터 ── 입력 및 검증 완료
+    
+✅ 외부 API
+    └── Google Gemini API ── 한국어 입출력 완벽 지원
 ```
 
-### 통합 전략
-- **매인 프로젝트**: 학습 도구 (Next.js)
-- **pyproj**: 실용 점괘 도구 (Python)
-- **시너지**: 학습한 괘 지식을 실제 점괘에서 작용
-- **데이터 공유**: MongoDB 통합 및 API 연동 가능성
+### 실제 검증된 데이터 플로우
+```
+사용자 브라우저 → http://localhost:3000/api/hexagrams
+                ↓
+          Next.js API Route (route.ts)
+                ↓
+          connectToDatabase() [0ms 연결]
+                ↓
+          Mongoose 쿼리 실행
+                ↓
+          MongoDB 데이터 반환
+                ↓
+          JSON 응답 (완벽한 한국어 지원)
+```
 
+### 현재 사용 중인 디자인 패턴
+
+#### 1. 연결 캐싱 패턴 (Connection Caching) ✅ 구현완료
+```javascript
+// src/lib/database.js에서 실제 구현됨
+let cached = global.mongoose;
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+// → Next.js 서버리스 환경에서 DB 연결 재사용 최적화
+```
+
+#### 2. 정적 메소드 패턴 (Static Methods) ✅ 구현완료
+```javascript
+// src/models/Hexagram.js에서 실제 구현됨
+hexagramSchema.statics.searchByKeyword = function(keyword) { ... }
+hexagramSchema.statics.getRandomHexagram = function() { ... }
+// → 모델 레벨에서 재사용 가능한 쿼리 메소드
+```
+
+#### 3. 미들웨어 패턴 (Middleware) ✅ 구현완료
+```javascript
+// 저장 전 자동 키워드 생성
+hexagramSchema.pre('save', function(next) {
+  if (!this.keywords || this.keywords.length === 0) {
+    this.keywords = this.getKeywords();
+  }
+  this.updatedAt = new Date();
+  next();
+});
+```
+
+#### 4. 에러 핸들링 패턴 ✅ 구현완료
+```javascript
+// 모든 API에서 표준화된 에러 응답
+catch (error) {
+  return NextResponse.json({
+    success: false,
+    message: 'Failed to fetch hexagrams',
+    error: {
+      type: error.name || 'DatabaseError',
+      message: error.message || 'Unknown database error'
+    }
+  }, { status: 500 });
+}
+```
+
+### 아직 구현되지 않은 패턴 (다음 단계)
+
+#### 1. AI 분석 팩토리 패턴 (예정)
+```javascript
+// 계획된 구조
+class GeminiAnalysisFactory {
+  static async createHexagramRecommendation(userSituation) {
+    // 사용자 상황 → 적합한 괘 추천
+  }
+  
+  static async createPerspectiveAnalysis(hexagram, userContext) {
+    // 선택된 괘 → 6가지 관점 분석
+  }
+}
+```
+
+#### 2. 캐싱 전략 패턴 (예정)
+```javascript
+// AI 응답 캐싱으로 성능 최적화
+class AIResponseCache {
+  static async getOrGenerate(key, generator) {
+    // 캐시 확인 → 없으면 AI 생성 → 캐시 저장
+  }
+}
+```
+
+## 📊 시스템 성숙도 평가
+
+### 완성도별 분류
+- **🟢 완전 구현 (95%+)**: Database Layer, API Layer, Basic UI
+- **🟡 부분 구현 (50-90%)**: Frontend Integration  
+- **🔴 미구현 (0-50%)**: AI Business Logic, Advanced UI
+
+### 안정성 지표
+- **데이터 무결성**: ✅ 스키마 검증 및 인덱스 완료
+- **에러 처리**: ✅ 모든 API 엔드포인트 커버
+- **성능**: ✅ 0ms DB 연결, 빠른 쿼리 응답
+- **확장성**: ✅ 64괘 → 수천 개 데이터도 지원 가능
+
+**결론**: 견고한 기반 시스템이 완성되어, 비즈니스 로직 구현에 집중할 수 있는 상태
