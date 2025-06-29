@@ -3,13 +3,52 @@
 ## 개발 환경
 
 ### 기본 설정
-- **OS**: Windows
-- **Python**: 3.x
+- **OS**: Windows (CMD 환경)
+- **Python**: 3.12+ (requires-python = ">=3.12")
 - **프로젝트 루트**: `D:\dev\html-prj\thinking_lenses\change_view\pyproj`
-- **패키지 관리**: uv (pyproject.toml)
+- **패키지 관리**: **uv** (pyproject.toml 기반)
+- **원래 목적**: 주역 64괘를 찰리 멍거의 격자틀 정신 모델에 매핑
+- **현재 목적**: 8괘 수학적 검증 및 시각화 시스템
+
+### uv 패키지 관리 (pyproject.toml)
+```toml
+[project]
+name = "pyproj"
+version = "0.1.0"
+description = "주역 8괘-64괘 수학적 매핑 및 검증 시스템"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "flask>=3.1.1",           # 웹 프레임워크
+    "matplotlib>=3.10.3",     # 시각화
+    "numpy>=2.3.0",           # 수치 계산
+    "pandas>=2.3.0",          # 데이터 분석
+    "plotly>=6.1.2",          # 인터랙티브 시각화
+    "scipy>=1.15.3",          # 과학 계산
+    "seaborn>=0.13.2",        # 통계 시각화
+    "streamlit>=1.45.1",      # 대체 웹 인터페이스
+    "sympy>=1.14.0",          # 기호 수학
+    "pymongo[srv]>=4.13.1",   # MongoDB 연결
+    "langchain-core>=0.3.65",  # AI/LLM
+    "langchain-ollama>=0.3.3", # Ollama 통합
+    "networkx>=3.5",          # 그래프 이론
+]
+```
+
+### 설치 및 실행 명령어
+```bash
+# 의존성 설치
+uv sync
+
+# 가상환경 활성화 및 실행
+uv run python app_bagua.py
+
+# 또는 가상환경에서
+.venv\Scripts\activate  # Windows
+python app_bagua.py
+```
 
 ### 현재 설치된 도구
-- Python 가상환경 (.venv)
 - Streamlit (시각화 및 인터페이스)
 - MongoDB 연결 기능
 
@@ -120,108 +159,66 @@ class BaguaVisualizer:
 - **MathWorld**: 수학 개념 정의
 - **Wikipedia API**: 기본 정보 수집
 
-## 성능 및 확장성
+## 현재 아키텍처 (Phase 1 완성)
 
-### 계산 최적화
-- **NumPy/SciPy**: 벡터화 연산
-- **Caching**: 중간 결과 저장
-- **Parallel Processing**: 멀티프로세싱
+### 모듈 구조
+```
+math_core/ (8개 모듈, 총 46.8KB)
+├── pi_verification.py        (5.5KB) ✅
+├── phi_verification.py       (5.2KB) ✅ 
+├── probability_verification.py (4.8KB) ✅
+├── calculus_verification.py  (5.1KB) ✅
+├── binary_verification.py    (5.3KB) ✅
+├── primes_verification.py    (6.3KB) ✅
+├── symmetry_verification.py  (7.3KB) ✅
+└── e_verification.py         (6.3KB) ✅
 
-### 메모리 관리
-- **Lazy Loading**: 필요시에만 로드
-- **Chunking**: 큰 데이터셋 분할 처리
-- **Garbage Collection**: 메모리 최적화
+web_routes/ 
+├── verification_routes.py    ✅ (Flask 라우트 분리)
+└── __init__.py               ✅
 
-## 검증 도구
+visualization/ 
+├── base64_encoder.py         ✅
+└── __init__.py               ✅
 
-### 수학적 검증
-- **SymPy**: 기호적 계산 검증
-- **Numerical Testing**: 수치적 정확성 확인
-- **Property-based Testing**: 수학적 성질 검증
+utils/
+├── config.py                 ✅
+└── __init__.py               ✅
+```
 
-### 통계적 검증
-- **Hypothesis Testing**: 가설 검증
-- **Correlation Analysis**: 상관관계 분석
-- **Significance Testing**: 통계적 유의성
+### API 엔드포인트
+- `/api/verification/pi` - π 검증
+- `/api/verification/golden-ratio` - φ 검증
+- `/api/verification/probability` - 확률론 검증
+- `/api/verification/calculus` - 미적분 검증
+- `/api/verification/binary` - 이진법 검증
+- `/api/verification/primes` - 소수 검증
+- `/api/verification/symmetry` - 대칭성 검증
+- `/api/verification/e` - 자연상수 e 검증
+- `/api/verification/all` - 전체 검증
 
-## 개발 도구
+### 웹 인터페이스
+- **verification.html**: 8개 탭 기반 검증 시스템
+- **LaTeX.css 스타일링**: 학술적 외관
+- **실시간 matplotlib 그래프**: base64 인코딩
+- **반응형 디자인**: 모바일 기본 지원
 
-### 코드 관리
-- **Git**: 버전 관리
-- **GitHub**: 원격 저장소
-- **Pre-commit**: 코드 품질 관리
+## Phase 1.5 기술 로드맵
 
-### 테스팅
-- **pytest**: 단위 테스트
-- **Hypothesis**: Property-based testing
-- **Coverage**: 테스트 커버리지
+### 우선순위 1: 성능 최적화
+- **Plotly 통합**: matplotlib → plotly 대화형 그래프
+- **캐싱 시스템**: Redis 또는 메모리 캐시
+- **병렬 처리**: multiprocessing.Pool 활용
+- **WebAssembly**: 고성능 수치 계산 (장기)
 
-### 문서화 도구
-- **Sphinx**: API 문서 생성
-- **MkDocs**: 프로젝트 문서화
-- **Jupyter Book**: 분석 결과 출판
+### 우선순위 2: 사용자 경험
+- **진행률 표시**: WebSocket 실시간 업데이트
+- **결과 저장**: JSON/PNG 다운로드 기능
+- **즐겨찾기**: 브라우저 localStorage 활용
+- **키보드 단축키**: 접근성 개선
 
-## 보안 및 백업
-
-### 데이터 보안
-- **환경 변수**: 민감 정보 관리
-- **Access Control**: 데이터 접근 제어
-- **Encryption**: 중요 데이터 암호화
-
-### 백업 전략
-- **Git**: 코드 버전 관리
-- **Cloud Storage**: 중요 결과 백업
-- **Automated Backup**: 정기적 백업
-
-## 협업 도구
-
-### 온라인 플랫폼
-- **Google Colab**: 클라우드 컴퓨팅
-- **Overleaf**: LaTeX 협업
-- **Notion**: 프로젝트 관리
-
-### 커뮤니케이션
-- **Slack/Discord**: 실시간 소통
-- **Email**: 공식 커뮤니케이션
-- **GitHub Issues**: 문제 추적
-
-## 학습 리소스
-
-### 온라인 코스
-- **Coursera**: 수학/AI 코스
-- **edX**: MIT/Harvard 강의
-- **YouTube**: 전문가 강의
-
-### 서적 및 논문
-- **Digital Libraries**: IEEE, ACM, Springer
-- **Books**: 전문 서적 리스트 관리
-- **Papers**: 관련 논문 데이터베이스
-
-## 기술적 제약사항
-
-### 계산 한계
-- **복잡도**: 지수적 증가 문제
-- **정밀도**: 부동소수점 한계
-- **메모리**: 대용량 데이터 처리 한계
-
-### 도구 한계
-- **라이선스**: 상용 소프트웨어 비용
-- **호환성**: 도구 간 데이터 변환
-- **학습곡선**: 새로운 도구 습득 시간
-
-## 향후 기술 계획
-
-### 단기 (3개월)
-- 기본 분석 파이프라인 구축
-- 시각화 시스템 개발
-- 데이터 검증 도구 구현
-
-### 중기 (6개월)
-- 교차 검증 시스템 고도화
-- 성능 최적화
-- 웹 인터페이스 개선
-
-### 장기 (1년+)
-- AI 분석 모듈 추가
-- 클라우드 마이그레이션
-- 오픈소스 공개 준비
+### 우선순위 3: 모니터링 & 분석
+- **성능 메트릭**: 각 모듈별 실행 시간 추적
+- **오차 분석**: 정확도 통계 대시보드
+- **사용 패턴**: 사용자 행동 분석
+- **A/B 테스트**: 인터페이스 개선 실험
