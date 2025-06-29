@@ -35,13 +35,22 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     console.error('❌ MongoDB 연결 테스트 실패:', error);
-    
+    let errorType = 'DatabaseError';
+    let errorMessage = 'Unknown database error';
+    if (error && typeof error === 'object') {
+      if ('name' in error && typeof (error as any).name === 'string') {
+        errorType = (error as any).name;
+      }
+      if ('message' in error && typeof (error as any).message === 'string') {
+        errorMessage = (error as any).message;
+      }
+    }
     return NextResponse.json({
       success: false,
       message: 'MongoDB connection test failed',
       error: {
-        type: error.name || 'DatabaseError',
-        message: error.message || 'Unknown database error',
+        type: errorType,
+        message: errorMessage,
         timestamp: new Date().toISOString()
       }
     }, { status: 500 });
@@ -75,7 +84,13 @@ export async function POST(request: NextRequest) {
     if (action === 'stats') {
       // 데이터베이스 통계 정보
       const db = await connectToDatabase();
-      const admin = db.connection.db.admin();
+      if (!db.db) {
+        return NextResponse.json({
+          success: false,
+          message: 'Database connection object is missing the "db" property.'
+        }, { status: 500 });
+      }
+      const admin = db.db.admin();
       const stats = await admin.serverStatus();
       
       return NextResponse.json({
@@ -99,12 +114,22 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('❌ Database action failed:', error);
     
+    let errorType = 'DatabaseError';
+    let errorMessage = 'Unknown database error';
+    if (error && typeof error === 'object') {
+      if ('name' in error && typeof (error as any).name === 'string') {
+        errorType = (error as any).name;
+      }
+      if ('message' in error && typeof (error as any).message === 'string') {
+        errorMessage = (error as any).message;
+      }
+    }
     return NextResponse.json({
       success: false,
       message: 'Database action failed',
       error: {
-        type: error.name || 'DatabaseError',
-        message: error.message || 'Unknown database error'
+        type: errorType,
+        message: errorMessage
       }
     }, { status: 500 });
   }

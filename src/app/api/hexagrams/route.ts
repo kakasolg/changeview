@@ -79,11 +79,12 @@ export async function GET(request: NextRequest) {
 
     if (keyword) {
       // 키워드 검색
-      hexagrams = await (Hexagram as IHexagramModel).searchByKeyword(keyword)
-        .limit(limit)
-        .skip(skip)
-        .sort({ number: 1 });
-      total = await (Hexagram as IHexagramModel).searchByKeyword(keyword).countDocuments();
+      let allResults = await (Hexagram as IHexagramModel).searchByKeyword(keyword);
+      total = allResults.length;
+      // 정렬 후 페이징
+      hexagrams = allResults
+        .sort((a, b) => a.number - b.number)
+        .slice(skip, skip + limit);
     } else {
       // 전체 조회
       hexagrams = await Hexagram.find(query)
